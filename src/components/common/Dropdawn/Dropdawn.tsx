@@ -4,8 +4,8 @@ import css from "./dropdawn.module.css"
 
 
 interface DropdawnProps {
-       value: Units;
-       units: {value: Units, label: string}[];
+       value: string;
+       units: {value: string, label: string}[];
        onChange: (e:ChangeEvent<{value: Units} & HTMLSelectElement>) => void;
 }
 

@@ -5,7 +5,7 @@ import css from "./info.module.css"
 interface IProps {
        icon: any,
        label: string,
-       value: string;
+       value: string | number;
        unit: string;
 }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Input, Info, Dropdawn } from "./components/common"
 import { Weather, Units, UnitsLabel } from "./types"
 import { getDate, getDay, getTime } from "./utils"
@@ -37,12 +37,24 @@ export const App = () => {
         weather: [{ icon: "04n" }],
     })
     const [loadStatus, setLoadStatus] = useState(LOAD_STATUSES.UNKNOWN)
-    const [dropdawnOptions, setDropdawnOptions] = useState<{ value: Units, label: string }[]>(
-        [
-            { value: 'metric', label: 'Metric, °C' },
-            { value: 'imperial', label: 'Imperial, °F' },
-            { value: 'standard', label: 'Standard, K' }
-        ])
+
+    const getWeather = (searchCity: string, unit: Units) => {
+        setLoadStatus(LOAD_STATUSES.LOADING)
+        myFetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&appid=a7e03ffabe5b1e62a91464877799652d&units=${unit}`)
+            .then((weather) => setWeather(weather))
+            .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
+            .catch(() => { setLoadStatus(LOAD_STATUSES.ERROR) })
+    }
+
+
+    const getWeatherDebounce = useCallback(debounce(getWeather, 1500), [])
+
+
+    const dropdawnOptions = [
+        { value: 'metric', label: 'Metric, °C' },
+        { value: 'imperial', label: 'Imperial, °F' },
+        { value: 'standard', label: 'Standard, K' }
+    ]
 
     const isOffline = true
 
@@ -50,23 +62,7 @@ export const App = () => {
         if (isOffline) {
             return
         }
-        setLoadStatus(LOAD_STATUSES.LOADING)
-        myFetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&appid=${process.env.REACT_APP_OPEN_WEATHER_TOKEN}&units=${unit}`)
-
-            .then((weather) => setWeather(weather))
-            .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
-            .catch(() => { setLoadStatus(LOAD_STATUSES.ERROR) })
-    }, [])
-
-    useEffect(() => {
-        if (isOffline) {
-            return
-        }
-        setLoadStatus(LOAD_STATUSES.LOADING)
-        myFetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&appid=a7e03ffabe5b1e62a91464877799652d&units=${unit}`)
-            .then((weather) => setWeather(weather))
-            .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
-            .catch(() => { setLoadStatus(LOAD_STATUSES.ERROR) })
+        getWeatherDebounce(searchCity, unit)
     }, [searchCity, unit])
 
 
@@ -118,12 +114,10 @@ export const App = () => {
                 </div>
                 <div className={css.infoWeather}>
                     <p className={css.temperature}>
-                        {/* @ts-ignore */}
-                        {Math.round(weather?.main.temp!)} {unitLabels[unit]}
+                        {Math.round(weather.main.temp)} {unitLabels[unit]}
                     </p>
                     <span className={css.temp_feel}>
-                        {/* @ts-ignore */}
-                        feels like {Math.round(weather?.main.feels_like!)} {unitLabels[unit]}
+                        feels like {Math.round(weather.main.feels_like)} {unitLabels[unit]}
                     </span>
                     <p className={css.date}>{getDate()}</p>
                     <p className={css.day}>{getDay()} {getTime()}</p>
@@ -133,9 +127,7 @@ export const App = () => {
                                 key={item.key}
                                 icon={item.icon}
                                 label={item.label}
-                                // @ts-ignore
-                                value={weather?.main[item.key] || weather.wind.speed}
-                                // @ts-ignore
+                                value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
                                 unit={item.unit[unit]}
                             />
                         ))}
