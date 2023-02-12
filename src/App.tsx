@@ -1,8 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
-import { Input, Info, Dropdawn } from "./components/common"
+import { useSelector, useDispatch } from "react-redux"
+import { Input, Info, Dropdawn, Loader } from "./components/common"
 import { Weather, Units, UnitsLabel } from "./types"
 import { getDate, getDay, getTime } from "./utils"
-import { Loader } from "./components/common/Loader"
+import { getLoadStatus, getWeatherFromStore } from "./store/reduser"
+import { set_error, set_loaded, set_loading, set_unknown } from "./store/actionCreators"
+
 import css from "./app.module.css"
 import humIcon from "./img/humidity-icon.svg"
 import pressureIcon from "./img/pressure.svg"
@@ -30,20 +33,24 @@ export const App = () => {
 
     const [searchCity, setSearchCity] = useState("Minsk")
     const [unit, setUnit] = useState<Units>("metric")
-    const [weather, setWeather] = useState<Weather>({
-        main: { temp: 0, humidity: 0, feels_like: 0, pressure: 0 },
-        wind: { speed: 0 },
-        id: 0,
-        weather: [{ icon: "04n" }],
-    })
-    const [loadStatus, setLoadStatus] = useState(LOAD_STATUSES.UNKNOWN)
+    // const [weather, setWeather] = useState<Weather>({
+    //     main: { temp: 0, humidity: 0, feels_like: 0, pressure: 0 },
+    //     wind: { speed: 0 },
+    //     id: 0,
+    //     weather: [{ icon: "04n" }],
+    // })
+    // const [loadStatus, setLoadStatus] = useState(LOAD_STATUSES.UNKNOWN)
+
+    const loadStatus = useSelector(getLoadStatus)
+    const weather = useSelector(getWeatherFromStore)
+    const dispatch = useDispatch()
 
     const getWeather = (searchCity: string, unit: Units) => {
-        setLoadStatus(LOAD_STATUSES.LOADING)
+        dispatch(set_loading())
         myFetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&appid=a7e03ffabe5b1e62a91464877799652d&units=${unit}`)
-            .then((weather) => setWeather(weather))
-            .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
-            .catch(() => { setLoadStatus(LOAD_STATUSES.ERROR) })
+            .then((weather) => dispatch(set_loaded(weather)))
+            // .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
+            .catch(() => dispatch(set_error()))
     }
 
 
