@@ -2,9 +2,9 @@ import { FC, ChangeEvent } from "react"
 import css from "./styles.module.css"
 
 interface InputProps {
-       value: string;
+       value?: string;
        disabled?: boolean;
-       onChange: (value: string, e: ChangeEvent<HTMLInputElement>) => void;
+       onChange?: (value: string, e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const Input: FC<InputProps> = ({ value, disabled, onChange }) => {
