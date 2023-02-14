@@ -37,6 +37,6 @@ export interface WeatherStore {
 export type SET_WEATHER_ACTION = { type: LOAD_STATUSES_TYPES.SET_LOADED, payload: Weather }
 export type SET_LOADING = { type: LOAD_STATUSES_TYPES.SET_LOADING }
 export type SET_ERROR = { type: LOAD_STATUSES_TYPES.SET_ERROR }
-export type SET_UNKNOWN = { type: LOAD_STATUSES_TYPES.SET_UNKNOWN }
 
-export type Action = SET_WEATHER_ACTION | SET_ERROR | SET_LOADING | SET_UNKNOWN
+
+export type Action = SET_WEATHER_ACTION | SET_ERROR | SET_LOADING 

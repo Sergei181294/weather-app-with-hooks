@@ -37,19 +37,12 @@ export const App = () => {
     const [searchCity, setSearchCity] = useState("Minsk")
     const [unit, setUnit] = useState<Units>("metric")
     const [inputValue, setInputValue] = useState("")
-    // const [weather, setWeather] = useState<Weather>({
-    //     main: { temp: 0, humidity: 0, feels_like: 0, pressure: 0 },
-    //     wind: { speed: 0 },
-    //     id: 0,
-    //     weather: [{ icon: "04n" }],
-    // })
-    // const [loadStatus, setLoadStatus] = useState(LOAD_STATUSES.UNKNOWN)
 
     const loadStatus = useSelector(getLoadStatus)
     const weather = useSelector(getWeatherFromStore)
     const isAuth = useSelector(getUserStatus)
     const dispatch = useDispatch()
-    
+
 
     const getWeather = (searchCity: string, unit: Units) => {
         dispatch(setLoading())
@@ -117,46 +110,51 @@ export const App = () => {
         standard: "K",
     }
 
+
     return (
-        <div> 
-            <input value = {inputValue} onChange= {(e) => setInputValue(e.target.value)}/>
-            <button onClick={() => dispatch(logIn(inputValue))} />
+        <div>
+            {isAuth ?
+                <div>
+                    <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                    <button onClick={() => dispatch(logIn(inputValue))} >Log in</button>
+                </div> :
 
-            <div className={css.main}>
-                <Loader isLoading={loadStatus === LOAD_STATUSES.LOADING} />
-                {loadStatus === LOAD_STATUSES.ERROR && (<span>Что-то пошло не так...</span>)}
-                <div className={css.container_left}>
-                    <div className={css.logo}>
-                        <img className={css.weatherIcon} src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt='weather icon' />
-                    </div>
-                    <div className={css.infoWeather}>
-                        <p className={css.temperature}>
-                            {Math.round(weather.main.temp)} {unitLabels[unit]}
-                        </p>
-                        <span className={css.temp_feel}>
-                            feels like {Math.round(weather.main.feels_like)} {unitLabels[unit]}
-                        </span>
-                        <p className={css.date}>{getDate()}</p>
-                        <p className={css.day}>{getDay()} {getTime()}</p>
-                        <ul className={css.list}>
-                            {infoItems.map((item) => (
-                                <Info
-                                    key={item.key}
-                                    icon={item.icon}
-                                    label={item.label}
-                                    value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
-                                    unit={item.unit[unit]}
-                                />
-                            ))}
-                        </ul>
-                    </div>
-                </div>
-                <div className={css.container_right}>
-                    <Input value={searchCity} onChange={(searchCity) => setSearchCity(searchCity)} />
-                    <Dropdawn value={unit} units={dropdawnOptions} onChange={(e) => setUnit(e.target.value)} />
 
-                </div>
-            </div>
+                <div className={css.main}>
+                    <Loader isLoading={loadStatus === LOAD_STATUSES.LOADING} />
+                    {loadStatus === LOAD_STATUSES.ERROR && (<span>Что-то пошло не так...</span>)}
+                    <div className={css.container_left}>
+                        <div className={css.logo}>
+                            <img className={css.weatherIcon} src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt='weather icon' />
+                        </div>
+                        <div className={css.infoWeather}>
+                            <p className={css.temperature}>
+                                {Math.round(weather.main.temp)} {unitLabels[unit]}
+                            </p>
+                            <span className={css.temp_feel}>
+                                feels like {Math.round(weather.main.feels_like)} {unitLabels[unit]}
+                            </span>
+                            <p className={css.date}>{getDate()}</p>
+                            <p className={css.day}>{getDay()} {getTime()}</p>
+                            <ul className={css.list}>
+                                {infoItems.map((item) => (
+                                    <Info
+                                        key={item.key}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
+                                        unit={item.unit[unit]}
+                                    />
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                    <div className={css.container_right}>
+                        <Input value={searchCity} onChange={(e) => setSearchCity(e.target.value)} />
+                        <Dropdawn value={unit} units={dropdawnOptions} onChange={(e) => setUnit(e.target.value)} />
+
+                    </div>
+                </div>}
         </div>
     )
 }
