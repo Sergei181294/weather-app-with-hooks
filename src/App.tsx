@@ -1,8 +1,14 @@
-import { useState, useEffect, useCallback } from "react"
-import { Input, Info, Dropdawn } from "./components/common"
+import { useState, useEffect, useCallback, useRef } from "react"
+import { useSelector, useDispatch } from "react-redux"
+import { Input, Info, Dropdawn, Loader } from "./components/common"
 import { Weather, Units, UnitsLabel } from "./types"
 import { getDate, getDay, getTime } from "./utils"
-import { Loader } from "./components/common/Loader"
+
+import { getUserStatus } from "./store/users/selectors"
+import { getLoadStatus, getWeatherFromStore } from "./store/weather/selectors"
+import { setError, setLoaded, setLoading } from "./store/weather/actionCreators"
+import { logIn } from "./store/users/actionCreators"
+
 import css from "./app.module.css"
 import humIcon from "./img/humidity-icon.svg"
 import pressureIcon from "./img/pressure.svg"
@@ -10,11 +16,11 @@ import windIcon from "./img/wind-icon.svg"
 import debounce from 'lodash/debounce';
 
 
-enum LOAD_STATUSES {
-    LOADING = "loading",
-    ERROR = "error",
-    LOADED = "loaded",
-    UNKNOWN = "unknown"
+export enum LOAD_STATUSES {
+    LOADING = "LOADING",
+    ERROR = "ERROR",
+    LOADED = "LOADED",
+    UNKNOWN = "UNKNOWN"
 }
 
 const myFetch = (url: string) => {
@@ -30,20 +36,20 @@ export const App = () => {
 
     const [searchCity, setSearchCity] = useState("Minsk")
     const [unit, setUnit] = useState<Units>("metric")
-    const [weather, setWeather] = useState<Weather>({
-        main: { temp: 0, humidity: 0, feels_like: 0, pressure: 0 },
-        wind: { speed: 0 },
-        id: 0,
-        weather: [{ icon: "04n" }],
-    })
-    const [loadStatus, setLoadStatus] = useState(LOAD_STATUSES.UNKNOWN)
+    const [inputValue, setInputValue] = useState("")
+
+    const loadStatus = useSelector(getLoadStatus)
+    const weather = useSelector(getWeatherFromStore)
+    const isAuth = useSelector(getUserStatus)
+    const dispatch = useDispatch()
+
 
     const getWeather = (searchCity: string, unit: Units) => {
-        setLoadStatus(LOAD_STATUSES.LOADING)
+        dispatch(setLoading())
         myFetch(`https://api.openweathermap.org/data/2.5/weather?q=${searchCity}&appid=a7e03ffabe5b1e62a91464877799652d&units=${unit}`)
-            .then((weather) => setWeather(weather))
-            .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
-            .catch(() => { setLoadStatus(LOAD_STATUSES.ERROR) })
+            .then((weather) => dispatch(setLoaded(weather)))
+            // .then(() => { setLoadStatus(LOAD_STATUSES.LOADED) })
+            .catch(() => dispatch(setError()))
     }
 
 
@@ -104,41 +110,51 @@ export const App = () => {
         standard: "K",
     }
 
-    return (
-        <div className={css.main}>
-            <Loader isLoading={loadStatus === LOAD_STATUSES.LOADING} />
-            {loadStatus === LOAD_STATUSES.ERROR && (<span>Что-то пошло не так...</span>)}
-            <div className={css.container_left}>
-                <div className={css.logo}>
-                    <img className={css.weatherIcon} src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt='weather icon' />
-                </div>
-                <div className={css.infoWeather}>
-                    <p className={css.temperature}>
-                        {Math.round(weather.main.temp)} {unitLabels[unit]}
-                    </p>
-                    <span className={css.temp_feel}>
-                        feels like {Math.round(weather.main.feels_like)} {unitLabels[unit]}
-                    </span>
-                    <p className={css.date}>{getDate()}</p>
-                    <p className={css.day}>{getDay()} {getTime()}</p>
-                    <ul className={css.list}>
-                        {infoItems.map((item) => (
-                            <Info
-                                key={item.key}
-                                icon={item.icon}
-                                label={item.label}
-                                value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
-                                unit={item.unit[unit]}
-                            />
-                        ))}
-                    </ul>
-                </div>
-            </div>
-            <div className={css.container_right}>
-                <Input value={searchCity} onChange={(searchCity) => setSearchCity(searchCity)} />
-                <Dropdawn value={unit} units={dropdawnOptions} onChange={(e) => setUnit(e.target.value)} />
 
-            </div>
+    return (
+        <div>
+            {isAuth ?
+                <div>
+                    <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
+                    <button onClick={() => dispatch(logIn(inputValue))} >Log in</button>
+                </div> :
+
+
+                <div className={css.main}>
+                    <Loader isLoading={loadStatus === LOAD_STATUSES.LOADING} />
+                    {loadStatus === LOAD_STATUSES.ERROR && (<span>Что-то пошло не так...</span>)}
+                    <div className={css.container_left}>
+                        <div className={css.logo}>
+                            <img className={css.weatherIcon} src={`https://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`} alt='weather icon' />
+                        </div>
+                        <div className={css.infoWeather}>
+                            <p className={css.temperature}>
+                                {Math.round(weather.main.temp)} {unitLabels[unit]}
+                            </p>
+                            <span className={css.temp_feel}>
+                                feels like {Math.round(weather.main.feels_like)} {unitLabels[unit]}
+                            </span>
+                            <p className={css.date}>{getDate()}</p>
+                            <p className={css.day}>{getDay()} {getTime()}</p>
+                            <ul className={css.list}>
+                                {infoItems.map((item) => (
+                                    <Info
+                                        key={item.key}
+                                        icon={item.icon}
+                                        label={item.label}
+                                        value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
+                                        unit={item.unit[unit]}
+                                    />
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                    <div className={css.container_right}>
+                        <Input value={searchCity} onChange={(e) => setSearchCity(e.target.value)} />
+                        <Dropdawn value={unit} units={dropdawnOptions} onChange={(e) => setUnit(e.target.value)} />
+
+                    </div>
+                </div>}
         </div>
     )
 }
