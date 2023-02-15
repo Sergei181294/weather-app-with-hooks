@@ -1,13 +1,27 @@
+import { Dispatch } from "redux"
 import { LOAD_STATUSES_TYPES, Weather, SET_WEATHER_ACTION } from "../../types";
+import { getWeather } from "../../api";
 
 
-export const setError = () => ({
+const setError = () => ({
        type: LOAD_STATUSES_TYPES.SET_ERROR
 });
-export const setLoaded = (weather: Weather): SET_WEATHER_ACTION => ({
+const setLoaded = (weather: Weather): SET_WEATHER_ACTION => ({
        type: LOAD_STATUSES_TYPES.SET_LOADED,
        payload: weather,
 });
-export const setLoading = () => ({
+const setLoading = () => ({
        type: LOAD_STATUSES_TYPES.SET_LOADING
 });
+
+export const fetchWeather = (params: { q: string; units: string }) => (dispatch: Dispatch) => {
+       dispatch(setLoading());
+     
+       getWeather(params)
+         .then((weather) => {
+           dispatch(setLoaded(weather));
+         })
+         .catch(() => {
+           dispatch(setError());
+         });
+     };
