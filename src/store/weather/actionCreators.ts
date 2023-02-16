@@ -1,3 +1,4 @@
+import { useDispatch } from "react-redux";
 import { Dispatch } from "redux"
 import { LOAD_STATUSES_TYPES, Weather, SET_WEATHER_ACTION } from "../../types";
 import { getWeather } from "../../api";
@@ -16,12 +17,7 @@ const setLoading = () => ({
 
 export const fetchWeather = (params: { q: string; units: string }) => (dispatch: Dispatch) => {
        dispatch(setLoading());
-     
        getWeather(params)
-         .then((weather) => {
-           dispatch(setLoaded(weather));
-         })
-         .catch(() => {
-           dispatch(setError());
-         });
+         .then((weather) => dispatch(setLoaded(weather)))
+         .catch(() => dispatch(setError()));
      };
