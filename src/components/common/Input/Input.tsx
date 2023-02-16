@@ -4,7 +4,7 @@ import css from "./styles.module.css"
 interface InputProps {
        value?: string;
        disabled?: boolean;
-       onChange: ( e: ChangeEvent<HTMLInputElement>) => void;
+       onChange: ( value: string , e: ChangeEvent<HTMLInputElement>) => void;
 }
 
 export const Input: FC<InputProps> = ({ value, disabled, onChange }) => {
@@ -13,7 +13,7 @@ export const Input: FC<InputProps> = ({ value, disabled, onChange }) => {
                      className={css.search}
                      value={value}
                      disabled={disabled}
-                     onChange={ onChange}
+                     onChange={(e) => onChange(e.target.value, e)}
               />
        )
 }
