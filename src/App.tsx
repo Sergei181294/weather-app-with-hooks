@@ -7,8 +7,9 @@ import { getDate, getDay, getTime } from "./utils"
 
 import { getUserStatus } from "./store/users/selectors"
 import { getLoadStatus, getWeatherFromStore } from "./store/weather/selectors"
-import { fetchWeather } from "./store/weather/actionCreators"
-import { logIn } from "./store/users/actionCreators"
+// import { fetchWeather } from "./store/weather/actionCreators"
+import { actionsUsers } from "./store/users/reducer"
+import { actionsWeather } from "./store/weather/reduser"
 
 import css from "./app.module.css"
 import humIcon from "./img/humidity-icon.svg"
@@ -25,12 +26,14 @@ export enum LOAD_STATUSES {
     UNKNOWN = "UNKNOWN"
 }
 
+type Unit = 'metric' | 'imperial' | 'standard';
+
 export interface Params {
     q: string;
-    units: string;
+    units: Unit;
 }
 
-const dropdawnOptions = [
+const dropdawnOptions: { value: Unit; label: string }[] = [
     { value: 'metric', label: 'Metric, °C' },
     { value: 'imperial', label: 'Imperial, °F' },
     { value: 'standard', label: 'Standard, K' }
@@ -55,7 +58,7 @@ export const App = () => {
         setParams((prevParams) => ({ ...prevParams, ...nextParams }));
     };
 
-    const fetchWeatheDebounce = useCallback(debounce((params: Params) => dispatch(fetchWeather(params) as any), 1500), [dispatch])
+    const fetchWeatheDebounce = useCallback(debounce((params: Params) => dispatch(actionsWeather.weatherOnBack(params) as any), 1500), [dispatch])
 
     useEffect(() => fetchWeatheDebounce(params), [params])
 
@@ -91,7 +94,7 @@ export const App = () => {
             {isAuth ?
                 <div>
                     <Input value={inputValue} onChange={(e) => setInputValue(e)} />
-                    <button onClick={() => dispatch(logIn(inputValue))} >Log in</button>
+                    <button onClick={() => dispatch(actionsUsers.login(inputValue))} >Log in</button>
                 </div> :
 
                 <div className={css.main}>
@@ -103,11 +106,10 @@ export const App = () => {
                         </div>
                         <div className={css.infoWeather}>
                             <p className={css.temperature}>
-                                {/* @ts-ignore */}
+                
                                 {Math.round(weather.main.temp)} {unitLabels[params.units]}
                             </p>
                             <span className={css.temp_feel}>
-                                {/* @ts-ignore */}
                                 feels like {Math.round(weather.main.feels_like)} {unitLabels[params.units]}
                             </span>
                             <p className={css.date}>{getDate()}</p>
@@ -119,7 +121,6 @@ export const App = () => {
                                         icon={item.icon}
                                         label={item.label}
                                         value={weather?.main[item.key as keyof Weather['main']] || weather.wind.speed}
-                                        /* @ts-ignore */
                                         unit={item.unit[params.units]}
                                     />
                                 ))}
@@ -128,8 +129,7 @@ export const App = () => {
                     </div>
                     <div className={css.container_right}>
                         <Input value={params.q} onChange={(q) => updateParams({ q })} />
-                        <Dropdawn value={params.units} units={dropdawnOptions} onChange={(units) => updateParams({ units })} />
-
+                        <Dropdawn value={params.units} units={dropdawnOptions} onChange={(units) => updateParams({ units: units as Unit })} />
                     </div>
                 </div>
             }
